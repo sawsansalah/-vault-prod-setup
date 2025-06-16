@@ -1,0 +1,41 @@
+USER-SUPPLIED VALUES:
+server:
+  dataStorage:
+    enabled: true
+    size: 10Gi
+    storageClass: standard
+  extraEnvironmentVars:
+    VAULT_LOG_LEVEL: debug
+  ha:
+    enabled: true
+    raft:
+      config: |
+        ui = true
+
+        listener "tcp" {
+          address       = "0.0.0.0:8200"
+          cluster_address = "0.0.0.0:8201"
+          tls_disable   = 1
+        }
+
+        storage "raft" {
+          path = "/vault/data"
+
+          retry_join {
+            leader_api_addr = "http://vault-0.vault-internal:8200"
+          }
+          retry_join {
+            leader_api_addr = "http://vault-1.vault-internal:8200"
+          }
+          retry_join {
+            leader_api_addr = "http://vault-2.vault-internal:8200"
+          }
+        }
+
+        service_registration "kubernetes" {}
+      enabled: true
+    replicas: 3
+  injector:
+    enabled: true
+  ui:
+    enabled: true
